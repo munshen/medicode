@@ -13,7 +13,6 @@ function App() {
   const [contractSigner, setContractSigner] = useState(null);
   const [serial, setSerial] = useState("");
   const [info, setInfo] = useState(null);
-  const [transferTo, setTransferTo] = useState("");
   const [newDevice, setNewDevice] = useState({
     serialNumber: "",
     productionDate: "",
@@ -27,17 +26,18 @@ function App() {
   async function connectWallet() {
     try {
       const { provider, signer } = await getProviderAndSigner();
+      if (!signer) throw new Error("MetaMask not connected");
       const userAddr = await signer.getAddress();
       setAccount(userAddr);
       setContractSigner(new ethers.Contract(contractAddress, contractABI, signer));
       setStatusMsg("✅ Connected with MetaMask (Sepolia)");
     } catch (err) {
-      console.error(err);
-      alert("Failed to connect MetaMask");
+      console.error("MetaMask connection error:", err);
+      alert("Failed to connect MetaMask. Check network & install MetaMask.");
     }
   }
 
-  // ------- Fetch all devices (only valid) -------
+  // ------- Fetch all devices -------
   async function fetchAllDevices() {
     try {
       const provider = getReadOnlyProvider();
@@ -46,34 +46,35 @@ function App() {
       const validDevices = [];
       for (const s of serials) {
         const d = await contractRO.getDevice(s);
-        if (d[4]) validDevices.push(s);
+        if (d[4]) validDevices.push(s); // d[4] is `valid` in Solidity
       }
       setDevices(validDevices);
     } catch (err) {
-      console.error("fetchAllDevices:", err);
+      console.error("fetchAllDevices error:", err);
     }
   }
 
-  // ------- Verify -------
+  // ------- Verify device -------
   async function verify(serialNumber) {
     try {
       const provider = getReadOnlyProvider();
       const contract = new ethers.Contract(contractAddress, contractABI, provider);
-      const res = await contract.verifyDevice(serialNumber);
+      const d = await contract.getDevice(serialNumber);
       setInfo({
-        serial: res[0],
-        date: res[1],
-        location: res[2],
-        manufacturer: res[3],
-        valid: res[4],
-        owner: res[5],
+        serial: d[0],
+        date: d[1],
+        location: d[2],
+        manufacturer: d[3],
+        valid: d[4],
       });
     } catch (err) {
-      console.error("verify:", err);
+      console.error("verify error:", err);
+      setInfo(null);
+      setStatusMsg("❌ Verification failed");
     }
   }
 
-  // ------- Register -------
+  // ------- Register device -------
   async function registerDevice() {
     if (!contractSigner) return alert("Connect MetaMask first.");
     try {
@@ -83,13 +84,14 @@ function App() {
         newDevice.productionDate,
         newDevice.productionLocation,
         newDevice.manufacturer,
+        ""
       );
       await tx.wait();
-      setStatusMsg("✅ Device registered!");
+      setStatusMsg("✅ Device registered successfully!");
       await fetchAllDevices();
     } catch (err) {
-      console.error("registerDevice:", err);
-      setStatusMsg("❌ Registration failed");
+      console.error("Full registration error:", err);
+      setStatusMsg("❌ Registration failed: " + (err.reason || err.message || "Unknown error"));
     }
   }
 
@@ -101,40 +103,10 @@ function App() {
       const tx = await contractSigner.revokeDevice(serialNumber);
       await tx.wait();
       setStatusMsg(`🚫 Device ${serialNumber} revoked`);
-      await fetchAllDevices(); // refresh list
-    } catch (err) {
-      console.error("revokeDevice:", err);
-      setStatusMsg("❌ Revoke failed");
-    }
-  }
-
-  // ------- Assign to buyer -------
-  async function assignToBuyer() {
-    if (!contractSigner) return alert("Connect MetaMask first.");
-    try {
-      setStatusMsg("⏳ Assigning device...");
-      const tx = await contractSigner.assignDeviceTo(serial, transferTo);
-      await tx.wait();
-      setStatusMsg("✅ Device assigned!");
       await fetchAllDevices();
     } catch (err) {
-      console.error("assignToBuyer:", err);
-      setStatusMsg("❌ Assignment failed");
-    }
-  }
-
-  // ------- Transfer ownership -------
-  async function transferOwnership() {
-    if (!contractSigner) return alert("Connect MetaMask first.");
-    try {
-      setStatusMsg("⏳ Transferring ownership...");
-      const tx = await contractSigner.transferDeviceOwnership(serial, transferTo);
-      await tx.wait();
-      setStatusMsg("✅ Ownership transferred!");
-      await fetchAllDevices();
-    } catch (err) {
-      console.error("transferOwnership:", err);
-      setStatusMsg("❌ Transfer failed");
+      console.error("revokeDevice error:", err);
+      setStatusMsg("❌ Revoke failed: " + (err.reason || err.message || "Unknown error"));
     }
   }
 
@@ -143,35 +115,20 @@ function App() {
   }, []);
 
   return (
-    <div
-      style={{
-        padding: 24,
-        fontFamily: "system-ui",
-        background: "#f0fdf4",
-        minHeight: "100vh",
-      }}
-    >
+    <div style={{ padding: 24, fontFamily: "system-ui", background: "#f0fdf4", minHeight: "100vh" }}>
       <h1 style={{ color: "#065f46" }}>🩺 MediCode — Public Verification</h1>
 
       <div style={{ marginBottom: 16 }}>
         <button
           onClick={connectWallet}
-          style={{
-            padding: "8px 14px",
-            borderRadius: 8,
-            background: "#16a34a",
-            color: "white",
-            border: "none",
-          }}
+          style={{ padding: "8px 14px", borderRadius: 8, background: "#16a34a", color: "white", border: "none" }}
         >
-          {account
-            ? `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`
-            : "Connect MetaMask"}
+          {account ? `Connected: ${account.slice(0, 6)}...${account.slice(-4)}` : "Connect MetaMask"}
         </button>
         <span style={{ marginLeft: 10, color: "#065f46" }}>{statusMsg}</span>
       </div>
 
-      {/* Register */}
+      {/* Register Device */}
       <div style={{ background: "white", padding: 16, borderRadius: 12, marginBottom: 20 }}>
         <h2>Register New Device</h2>
         {Object.keys(newDevice).map((key) => (
@@ -180,74 +137,45 @@ function App() {
             placeholder={key}
             value={newDevice[key]}
             onChange={(e) => setNewDevice({ ...newDevice, [key]: e.target.value })}
-            style={{
-              display: "block",
-              width: "100%",
-              marginBottom: 8,
-              padding: 8,
-              borderRadius: 6,
-              border: "1px solid #d1fae5",
-            }}
+            style={{ display: "block", width: "100%", marginBottom: 8, padding: 8, borderRadius: 6, border: "1px solid #d1fae5" }}
           />
         ))}
         <button
           onClick={registerDevice}
-          style={{
-            background: "#10b981",
-            color: "white",
-            padding: "8px 12px",
-            borderRadius: 8,
-            border: "none",
-          }}
+          style={{ background: "#10b981", color: "white", padding: "8px 12px", borderRadius: 8, border: "none" }}
         >
           Register
         </button>
       </div>
 
-      {/* Verify */}
+      {/* Verify Device */}
       <div style={{ background: "white", padding: 16, borderRadius: 12, marginBottom: 20 }}>
         <h2>Verify Device</h2>
         <input
           placeholder="Serial Number"
           value={serial}
           onChange={(e) => setSerial(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 8,
-            borderRadius: 6,
-            border: "1px solid #d1fae5",
-            marginBottom: 8,
-          }}
+          style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #d1fae5", marginBottom: 8 }}
         />
         <button
           onClick={() => verify(serial)}
-          style={{
-            background: "#2563eb",
-            color: "white",
-            padding: "8px 12px",
-            borderRadius: 8,
-            border: "none",
-          }}
+          style={{ background: "#2563eb", color: "white", padding: "8px 12px", borderRadius: 8, border: "none" }}
         >
           Verify
         </button>
 
         {info && (
           <div style={{ marginTop: 10 }}>
-            <p>
-              <strong>Serial:</strong> {info.serial}
-            </p>
-            <p>
-              <strong>Valid:</strong> {info.valid ? "✅ Authentic" : "❌ Revoked"}
-            </p>
-            <p>
-              <strong>Owner:</strong> {info.owner}
-            </p>
+            <p><strong>Serial:</strong> {info.serial}</p>
+            <p><strong>Date:</strong> {info.date}</p>
+            <p><strong>Location:</strong> {info.location}</p>
+            <p><strong>Manufacturer:</strong> {info.manufacturer}</p>
+            <p><strong>Valid:</strong> {info.valid ? "✅ Authentic" : "❌ Revoked"}</p>
           </div>
         )}
       </div>
 
-      {/* All valid devices */}
+      {/* All Valid Devices */}
       <div style={{ background: "white", padding: 16, borderRadius: 12 }}>
         <h2>All Valid Devices</h2>
         {devices.length === 0 ? (
@@ -259,28 +187,14 @@ function App() {
                 {d}
                 <button
                   onClick={() => verify(d)}
-                  style={{
-                    marginLeft: 8,
-                    background: "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    padding: "4px 8px",
-                    borderRadius: 6,
-                  }}
+                  style={{ marginLeft: 8, background: "#3b82f6", color: "white", border: "none", padding: "4px 8px", borderRadius: 6 }}
                 >
                   Verify
                 </button>
                 {account && (
                   <button
                     onClick={() => revokeDevice(d)}
-                    style={{
-                      marginLeft: 8,
-                      background: "#dc2626",
-                      color: "white",
-                      border: "none",
-                      padding: "4px 8px",
-                      borderRadius: 6,
-                    }}
+                    style={{ marginLeft: 8, background: "#dc2626", color: "white", border: "none", padding: "4px 8px", borderRadius: 6 }}
                   >
                     Revoke
                   </button>

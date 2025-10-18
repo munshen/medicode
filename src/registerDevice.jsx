@@ -1,78 +1,79 @@
-import { useState } from "react";
-import { getProviderAndSigner, registerNewDevice } from "../contractConfig";
+// src/pages/VerifyDevice.jsx
+import React, { useState } from "react";
+import { fetchDevice } from "../contractConfig";
 
-function RegisterDevicePage() {
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
-
+export default function VerifyDevice() {
   const [serialNumber, setSerialNumber] = useState("");
-  const [productionDate, setProductionDate] = useState("");
-  const [productionLocation, setProductionLocation] = useState("");
-  const [manufacturer, setManufacturer] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const connectWallet = async () => {
-    const { signer } = await getProviderAndSigner();
-    if (signer) setWalletConnected(true);
-    else setErrorMsg("MetaMask not detected or connection failed.");
-  };
-
-  const handleRegister = async () => {
-    setErrorMsg("");
-    setSuccessMsg("");
-
-    if (!serialNumber || !productionDate || !productionLocation || !manufacturer) {
-      setErrorMsg("Please fill in all fields.");
+  const verifyDevice = async () => {
+    if (!serialNumber.trim()) {
+      alert("Please enter a serial number");
       return;
     }
 
-    const newDevice = {
-      serialNumber,
-      productionDate,
-      productionLocation,
-      manufacturer,
-      // No IPFS field here! handled automatically
-    };
+    setLoading(true);
+    setResult(null);
 
     try {
-      setLoading(true);
-      await registerNewDevice(newDevice);
-      setSuccessMsg(`Device "${serialNumber}" registered successfully!`);
-      setSerialNumber("");
-      setProductionDate("");
-      setProductionLocation("");
-      setManufacturer("");
+      const device = await fetchDevice(serialNumber);
+      if (device.valid) {
+        setResult({ success: true, message: "✅ Verification successful!" });
+      } else {
+        setResult({ success: false, message: "❌ Device not found or invalid." });
+      }
     } catch (err) {
-      console.error(err);
-      setErrorMsg("Registration failed. Check console for details.");
+      console.error("verifyDevice error:", err);
+      setResult({ success: false, message: "❌ Verification failed." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "0 auto", padding: "20px" }}>
-      {!walletConnected ? (
-        <button onClick={connectWallet}>Connect Wallet</button>
-      ) : (
-        <>
-          <h2>Register New Device</h2>
-          {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
-          {successMsg && <p style={{ color: "green" }}>{successMsg}</p>}
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
+      <div className="bg-white shadow-md rounded-2xl p-8 max-w-md w-full">
+        <h1 className="text-2xl font-bold text-center mb-2">Verify Device</h1>
+        <p className="text-sm text-gray-600 text-center mb-6">
+          Publicly accessible. For further information, visit{" "}
+          <a
+            href="https://sepolia.etherscan.io/address/0x93ED569271192b67F33e9D15f42b02Fe15c2F5f8#readContract"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            this Etherscan link
+          </a>{" "}
+          for behind-the-scenes authentication.
+        </p>
 
-          <input placeholder="Serial Number" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
-          <input placeholder="Production Date" value={productionDate} onChange={(e) => setProductionDate(e.target.value)} />
-          <input placeholder="Production Location" value={productionLocation} onChange={(e) => setProductionLocation(e.target.value)} />
-          <input placeholder="Manufacturer" value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} />
+        <input
+          type="text"
+          placeholder="Enter Serial Number"
+          value={serialNumber}
+          onChange={(e) => setSerialNumber(e.target.value)}
+          className="border border-gray-300 rounded-lg p-3 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-green-400"
+        />
 
-          <button onClick={handleRegister} disabled={loading}>
-            {loading ? "Registering..." : "Register Device"}
-          </button>
-        </>
-      )}
+        <button
+          onClick={verifyDevice}
+          disabled={loading}
+          className="w-full bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+        >
+          {loading ? "Verifying..." : "Verify"}
+        </button>
+
+        {result && (
+          <p
+            className={`mt-4 text-center font-medium ${
+              result.success ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {result.message}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
-
-export default RegisterDevicePage;

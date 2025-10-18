@@ -29,8 +29,7 @@ export async function getProviderAndSigner() {
 }
 
 // ================== CONTRACT ABI ==================
-// This ABI includes the event and the view functions needed.
-// Keep it consistent with your deployed contract (used by ethers to call and parse logs).
+// CORRECTED ABI - matches what's actually working on Etherscan
 export const contractABI = [
   {
     inputs: [],
@@ -82,7 +81,6 @@ export const contractABI = [
     type: "function",
   },
   {
-    // getDevice returns the struct (as seen on Etherscan). Keep this entry — we will call it but handle reverts.
     inputs: [{ internalType: "string", name: "serial", type: "string" }],
     name: "getDevice",
     outputs: [
@@ -104,34 +102,27 @@ export const contractABI = [
     type: "function",
   },
   {
-    // **Important** - verifyDevice is the dependable view that returns the full struct including valid
+    // **FIXED: Use the exact return structure from Etherscan**
     inputs: [{ internalType: "string", name: "serial", type: "string" }],
     name: "verifyDevice",
     outputs: [
-      {
-        components: [
-          { internalType: "string", name: "serialNumber", type: "string" },
-          { internalType: "string", name: "productionDate", type: "string" },
-          { internalType: "string", name: "productionLocation", type: "string" },
-          { internalType: "string", name: "manufacturer", type: "string" },
-          { internalType: "string", name: "ipfsHash", type: "string" },
-          { internalType: "bool", name: "valid", type: "bool" },
-          { internalType: "address", name: "deviceOwner", type: "address" },
-        ],
-        internalType: "struct MediCode.Device",
-        name: "",
-        type: "tuple",
-      },
+      { internalType: "string", name: "serialNumber", type: "string" },
+      { internalType: "string", name: "productionDate", type: "string" },
+      { internalType: "string", name: "productionLocation", type: "string" },
+      { internalType: "string", name: "manufacturer", type: "string" },
+      { internalType: "string", name: "ipfsHash", type: "string" },
+      { internalType: "bool", name: "valid", type: "bool" },
+      { internalType: "address", name: "deviceOwner", type: "address" }
     ],
     stateMutability: "view",
     type: "function",
   },
   {
+    inputs: [],
     name: "getAllSerials",
     outputs: [{ internalType: "string[]", name: "", type: "string[]" }],
     stateMutability: "view",
     type: "function",
-    inputs: [],
   },
 ];
 
@@ -195,23 +186,27 @@ export async function fetchDevice(serial) {
     try {
       const verified = await contract.verifyDevice(serial);
       console.log("🔍 verifyDevice raw result for", serial, "=>", verified);
-      // Handle several possible return shapes
-      if (typeof verified === "boolean") {
-        validFlag = Boolean(verified);
-      } else if (Array.isArray(verified)) {
-        // expected tuple: [serialNumber, productionDate, productionLocation, manufacturer, ipfsHash, valid, deviceOwner]
-        productionDate = sanitizeString(verified[2]);
-        productionLocation = sanitizeString(verified[3]);
-        manufacturer = sanitizeString(verified[1]);
-        ipfsHash = "";
-        validFlag = Boolean(verified[4]);
-      } else if (verified && typeof verified === "object") {
-        productionDate = sanitizeString(verified.date ?? verified[2]);
-        productionLocation = sanitizeString(verified.location ?? verified[3]);
-        manufacturer = sanitizeString(verified.manufacturer ?? verified[1]);
-        ipfsHash = sanitizeString(verified.ipfsHash ?? "");
-        validFlag = Boolean(verified.isRegistered ?? verified[4]);
+      
+      // FIXED: Properly handle the returned object structure
+      if (verified && typeof verified === "object") {
+        // The verified object should have the fields from your ABI
+        const serialNumber = sanitizeString(verified.serialNumber);
+        productionDate = sanitizeString(verified.productionDate);
+        productionLocation = sanitizeString(verified.productionLocation);
+        manufacturer = sanitizeString(verified.manufacturer);
+        ipfsHash = sanitizeString(verified.ipfsHash);
+        validFlag = Boolean(verified.valid);
+        
+        console.log("✅ Parsed verifyDevice:", {
+          serialNumber,
+          productionDate,
+          productionLocation,
+          manufacturer,
+          ipfsHash,
+          valid: validFlag
+        });
       } else {
+        console.warn("verifyDevice returned unexpected format:", verified);
         validFlag = false;
       }
     } catch (verifyErr) {
@@ -227,7 +222,6 @@ export async function fetchDevice(serial) {
       }
 
       // Fallback B: try getDevice() for details (may revert; we catch and will fallback to logs)
-            // Fallback B: try getDevice() for details (may revert; we catch and will fallback to logs)
       try {
         const details = await contract.getDevice(serial);
         // details may be array-like or object-like

@@ -83,11 +83,12 @@ async function connectWallet() {
         {/* Login Section */}
         <div style={{ 
           background: "white", 
-          padding: "2rem", 
+          padding: "clamp(1rem, 3vw, 1.5rem)", 
           borderRadius: "16px", 
           boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          width: "100%",
-          maxWidth: "400px"
+          width: "90%",
+          maxWidth: "350px",
+          margin: "0 auto"
         }}>
           <h2 style={{ color: "#0369a1", marginBottom: "1.5rem", textAlign: "center" }}>
             Login with MetaMask

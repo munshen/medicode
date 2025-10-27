@@ -161,7 +161,7 @@ async function connectWallet() {
       fontWeight: "500"
     }}
   >
-    Read more.
+    <br />Read more.
   </a>
 </p>
         </div>
@@ -382,7 +382,7 @@ function GuestApp() {
               fontWeight: "500"
             }}
           >
-            Read more.
+            <br />Read more.
           </a>
         </p>
         </div>

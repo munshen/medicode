@@ -29,7 +29,7 @@ export async function getProviderAndSigner() {
 }
 
 // ================== CONTRACT ABI ==================
-// CORRECTED ABI - matches what's actually working on Etherscan
+// CORRECTED ABI - Using actual function names from deployed contract
 export const contractABI = [
   {
     inputs: [],
@@ -102,7 +102,6 @@ export const contractABI = [
     type: "function",
   },
   {
-    // **FIXED: Use the exact return structure from Etherscan**
     inputs: [{ internalType: "string", name: "serial", type: "string" }],
     name: "verifyDevice",
     outputs: [
@@ -124,6 +123,28 @@ export const contractABI = [
     stateMutability: "view",
     type: "function",
   },
+  // CORRECTED: Using actual function names from contract
+  {
+    inputs: [
+      { internalType: "string", name: "_serialNumber", type: "string" },
+      { internalType: "address", name: "_newOwner", type: "address" }
+    ],
+    name: "assignDeviceTo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  // CORRECTED: Using actual function names from contract
+  {
+    inputs: [
+      { internalType: "string", name: "_serialNumber", type: "string" },
+      { internalType: "address", name: "_to", type: "address" }
+    ],
+    name: "transferDeviceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }
 ];
 
 // ================== HELPERS ==================
@@ -292,7 +313,7 @@ export async function fetchDevice(serial) {
   }
 }
 
-// ================== Registration helper (unchanged) ==================
+// ================== Registration helper ==================
 export async function registerNewDevice(device) {
   const { signer } = await getProviderAndSigner();
   if (!signer) throw new Error("MetaMask not connected");
@@ -313,6 +334,46 @@ export async function registerNewDevice(device) {
     return tx;
   } catch (err) {
     console.error("registerDevice failed:", err);
+    throw err;
+  }
+}
+
+// ================== CORRECTED: Assign Ownership helper ==================
+export async function assignOwnership(serial, newOwner) {
+  const { signer } = await getProviderAndSigner();
+  if (!signer) throw new Error("MetaMask not connected");
+
+  const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+  try {
+    console.log("Assigning ownership for serial:", serial, "to:", newOwner);
+    // CORRECTED: Using actual function name from contract
+    const tx = await contract.assignDeviceTo(serial, newOwner);
+    await tx.wait();
+    console.log("✅ Ownership assigned successfully");
+    return tx;
+  } catch (err) {
+    console.error("assignOwnership failed:", err);
+    throw err;
+  }
+}
+
+// ================== CORRECTED: Transfer Ownership helper ==================
+export async function transferOwnership(serial, newOwner) {
+  const { signer } = await getProviderAndSigner();
+  if (!signer) throw new Error("MetaMask not connected");
+
+  const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+  try {
+    console.log("Transferring ownership for serial:", serial, "to:", newOwner);
+    // CORRECTED: Using actual function name from contract
+    const tx = await contract.transferDeviceOwnership(serial, newOwner);
+    await tx.wait();
+    console.log("✅ Ownership transferred successfully");
+    return tx;
+  } catch (err) {
+    console.error("transferOwnership failed:", err);
     throw err;
   }
 }

@@ -155,18 +155,6 @@ function sanitizeString(x) {
   return String(x).replace(/\u0000/g, "").replace(/[\x00-\x1F\x7F]/g, "").trim();
 }
 
-/**
- * fetchDevice(serial)
- * - returns an object:
- *   {
- *     serial,
- *     existsInList: boolean,
- *     valid: boolean,
- *     manufacturer, productionDate, productionLocation, ipfsHash
- *   }
- *
- * Robust: uses getAllSerials -> verifyDevice (preferred) -> fallbacks (isRegistered/getDevice/logs).
- */
 export async function fetchDevice(serial) {
   if (!serial || typeof serial !== "string") {
     throw new Error("Invalid serial");
@@ -194,6 +182,7 @@ export async function fetchDevice(serial) {
         productionDate: "",
         productionLocation: "",
         ipfsHash: "",
+        deviceOwner: "", // ADD THIS
       };
     }
 
@@ -203,6 +192,7 @@ export async function fetchDevice(serial) {
     let productionDate = "";
     let productionLocation = "";
     let ipfsHash = "";
+    let deviceOwner = ""; // ADD THIS
 
     try {
       const verified = await contract.verifyDevice(serial);
@@ -217,6 +207,7 @@ export async function fetchDevice(serial) {
         manufacturer = sanitizeString(verified.manufacturer);
         ipfsHash = sanitizeString(verified.ipfsHash);
         validFlag = Boolean(verified.valid);
+        deviceOwner = verified.deviceOwner || ""; // ADD THIS - don't sanitize address
         
         console.log("✅ Parsed verifyDevice:", {
           serialNumber,
@@ -224,7 +215,8 @@ export async function fetchDevice(serial) {
           productionLocation,
           manufacturer,
           ipfsHash,
-          valid: validFlag
+          valid: validFlag,
+          deviceOwner // ADD THIS
         });
       } else {
         console.warn("verifyDevice returned unexpected format:", verified);
@@ -250,6 +242,7 @@ export async function fetchDevice(serial) {
         productionLocation = sanitizeString(details[2] ?? details.productionLocation);
         manufacturer = sanitizeString(details[3] ?? details.manufacturer);
         ipfsHash = sanitizeString(details[4] ?? details.ipfsHash);
+        deviceOwner = details[5] ?? details.deviceOwner ?? ""; // ADD THIS
       } catch (getDevErr) {
         console.warn("fetchDevice: getDevice() failed — falling back to event logs:", getDevErr);
 
@@ -275,6 +268,7 @@ export async function fetchDevice(serial) {
             manufacturer = sanitizeString(parsed.args.manufacturer ?? parsed.args[1]);
             productionDate = sanitizeString(parsed.args.date ?? parsed.args[2]);
             productionLocation = sanitizeString(parsed.args.location ?? parsed.args[3]);
+            deviceOwner = parsed.args.owner ?? parsed.args[4] ?? ""; // ADD THIS
             console.log("✅ Parsed DeviceRegistered log for", serial, parsed.args);
           } else {
             console.warn("No DeviceRegistered logs found for", serial);
@@ -285,33 +279,35 @@ export async function fetchDevice(serial) {
       }
     }
 
-    // Return normalized object
-    return {
-      serial,
-      existsInList: true,
-      valid: validFlag,
-      manufacturer,
-      productionDate,
-      productionLocation,
-      ipfsHash,
-    };
-  } catch (err) {
-    console.error("fetchDevice() outer error:", err);
-    const msg = err?.message || "";
-    if (msg.includes("missing revert data") || err?.code === "CALL_EXCEPTION") {
-      return {
-        serial,
-        existsInList: false,
-        valid: false,
-        manufacturer: "",
-        productionDate: "",
-        productionLocation: "",
-        ipfsHash: "",
-      };
+        // Return the final result with deviceOwner
+        return {
+          serial,
+          existsInList: true,
+          valid: validFlag,
+          manufacturer,
+          productionDate,
+          productionLocation,
+          ipfsHash,
+          deviceOwner, // ADD THIS
+        };
+      } catch (err) {
+        console.error("fetchDevice() outer error:", err);
+        const msg = err?.message || "";
+        if (msg.includes("missing revert data") || err?.code === "CALL_EXCEPTION") {
+          return {
+            serial,
+            existsInList: false,
+            valid: false,
+            manufacturer: "",
+            productionDate: "",
+            productionLocation: "",
+            ipfsHash: "",
+            deviceOwner: "", // ADD THIS
+          };
+        }
+        throw new Error("Failed to fetch device details: " + msg);
+      }
     }
-    throw new Error("Failed to fetch device details: " + msg);
-  }
-}
 
 // ================== Registration helper ==================
 export async function registerNewDevice(device) {

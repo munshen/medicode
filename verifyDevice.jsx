@@ -20,7 +20,7 @@ export default function VerifyDevice() {
       const result = await fetchDevice(serial.trim());
       console.log("fetchDevice returned:", result);
 
-      // result: { serial, existsInList, valid, manufacturer, productionDate, productionLocation, ipfsHash }
+      // result: { serial, existsInList, valid, manufacturer, productionDate, productionLocation, ipfsHash, deviceOwner }
       if (!result || result.existsInList === false) {
         setStatus({ type: "invalid", message: "❌ Invalid Serial Number — not registered on-chain." });
         return;
@@ -35,6 +35,7 @@ export default function VerifyDevice() {
             productionDate: result.productionDate || "—",
             productionLocation: result.productionLocation || "—",
             ipfsHash: result.ipfsHash || "—",
+            deviceOwner: result.deviceOwner || "—",
           },
         });
       } else {
@@ -46,6 +47,7 @@ export default function VerifyDevice() {
             productionDate: result.productionDate || "—",
             productionLocation: result.productionLocation || "—",
             ipfsHash: result.ipfsHash || "—",
+            deviceOwner: result.deviceOwner || "—",
           },
         });
       }
@@ -114,6 +116,7 @@ export default function VerifyDevice() {
               <p><strong>Date:</strong> {status.details.productionDate}</p>
               <p><strong>Location:</strong> {status.details.productionLocation}</p>
               <p><strong>IPFS:</strong> {status.details.ipfsHash}</p>
+              <p><strong>Owner:</strong> {status.details.deviceOwner}</p>
             </>
           )}
           {status.type === "revoked" && (
@@ -123,9 +126,15 @@ export default function VerifyDevice() {
               <p><strong>Date:</strong> {status.details.productionDate}</p>
               <p><strong>Location:</strong> {status.details.productionLocation}</p>
               <p><strong>IPFS:</strong> {status.details.ipfsHash}</p>
+              <p><strong>Owner:</strong> {status.details.deviceOwner}</p>
             </>
           )}
-          {status.type === "invalid" && <p style={{ color: "red" }}>{status.message}</p>}
+          {status.type === "invalid" && (
+            <>
+              <p><strong>Serial:</strong> {serial}</p>
+              <p style={{ color: "red" }}><strong>Status:</strong> {status.message}</p>
+            </>
+          )}
           {status.type === "error" && (
             <>
               <p style={{ color: "darkred" }}>{status.message}</p>

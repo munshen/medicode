@@ -7,38 +7,38 @@ function App() {
   const [account, setAccount] = useState(null);
   const [statusMsg, setStatusMsg] = useState("");
 
-// Connect MetaMask and login - RESTRICTED to authorized addresses only
-async function connectWallet() {
-  try {
-    const { signer } = await getProviderAndSigner();
-    if (!signer) throw new Error("MetaMask not connected");
-    const addr = await signer.getAddress();
-    
-    // List of authorized addresses (company rep + collaborators)
-    const authorizedAddresses = [
-      "0x9Da7d2CA5C22E3134653920B98a7C9d272706329", // Company representative
-      // ADD MORE COLLABORATOR ADDRESSES HERE:
-      // "0x1234567890123456789012345678901234567890", // Collaborator 1
-      // "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd", // Collaborator 2
-    ];
-    
-    // Check if connected address is authorized
-    const isAuthorized = authorizedAddresses.some(authorizedAddr => 
-      authorizedAddr.toLowerCase() === addr.toLowerCase()
-    );
-    
-    if (!isAuthorized) {
-      throw new Error("Access denied. Only authorized company representatives can access this dashboard.");
+  // Connect MetaMask and login - RESTRICTED to authorized addresses only
+  async function connectWallet() {
+    try {
+      const { signer } = await getProviderAndSigner();
+      if (!signer) throw new Error("MetaMask not connected");
+      const addr = await signer.getAddress();
+      
+      // List of authorized addresses (company rep + collaborators)
+      const authorizedAddresses = [
+        "0x9Da7d2CA5C22E3134653920B98a7C9d272706329", // Company representative
+        // ADD MORE COLLABORATOR ADDRESSES HERE:
+        // "0x1234567890123456789012345678901234567890", // Collaborator 1
+        // "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd", // Collaborator 2
+      ];
+      
+      // Check if connected address is authorized
+      const isAuthorized = authorizedAddresses.some(authorizedAddr => 
+        authorizedAddr.toLowerCase() === addr.toLowerCase()
+      );
+      
+      if (!isAuthorized) {
+        throw new Error("Access denied. Only authorized company representatives can access this dashboard.");
+      }
+      
+      setAccount(addr);
+      setUserType('loggedIn');
+      setStatusMsg("✅ Login successful! Welcome to the company dashboard.");
+    } catch (err) {
+      console.error("connectWallet error:", err);
+      setStatusMsg("❌ " + err.message);
     }
-    
-    setAccount(addr);
-    setUserType('loggedIn');
-    setStatusMsg("✅ Login successful! Welcome to the company dashboard.");
-  } catch (err) {
-    console.error("connectWallet error:", err);
-    setStatusMsg("❌ " + err.message);
   }
-}
 
   // Continue as guest
   function continueAsGuest() {
@@ -144,26 +144,43 @@ async function connectWallet() {
           )}
 
           {/* ADD THIS NEW SECTION */}
-<p style={{ 
-  textAlign: "center", 
-  marginTop: "2rem", 
-  color: "#64748b",
-  fontSize: "0.9rem"
-}}>
-  How to Register a MetaMask Wallet?{" "}
-  <a
-    href="https://support.metamask.io/start/getting-started-with-metamask/"
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{ 
-      color: "#0374b1ff", 
-      textDecoration: "underline",
-      fontWeight: "500"
-    }}
-  >
-    <br />Read more.
-  </a>
-</p>
+          <div style={{ 
+            textAlign: "center", 
+            marginTop: "2rem", 
+            color: "#64748b",
+            fontSize: "0.9rem"
+          }}>
+            How to Register a MetaMask Wallet?{" "}
+            <a
+              href="https://support.metamask.io/start/getting-started-with-metamask/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ 
+                color: "#0374b1ff", 
+                textDecoration: "underline",
+                fontWeight: "500"
+              }}
+            >
+              <br />Read more.
+            </a>
+            <p style={{ marginTop: "0.5rem", marginBottom: "0.5rem", fontSize: "0.8rem" }}>
+              For mobile users,
+              <br />1. Install MetaMask app from App Store / Play Store
+              <br />2. Open this site in MetaMask's built-in browser
+            </p>
+            <a
+              href="https://support.metamask.io/start/getting-started-with-metamask/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ 
+                color: "#0374b1ff", 
+                textDecoration: "underline",
+                fontWeight: "500"
+              }}
+            >
+              Read detailed guide
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -205,7 +222,6 @@ function GuestApp() {
           status: "invalid",
           message: "❌ Invalid Serial Number — not registered on-chain.",
         });
-        setStatusMsg("❌ Invalid Serial Number");
       } else if (d.valid === true || d.valid === "true" || d.valid == 1) {
         setInfo({
           serial: serialToVerify,
@@ -213,9 +229,9 @@ function GuestApp() {
           manufacturer: d.manufacturer || "—",
           date: d.productionDate || "—",
           location: d.productionLocation || "—",
+          owner: d.deviceOwner || "—",
           message: "✅ Authentic — device is valid and active.",
         });
-        setStatusMsg("✅ Authentic");
       } else {
         setInfo({
           serial: serialToVerify,
@@ -223,16 +239,16 @@ function GuestApp() {
           manufacturer: d.manufacturer || "—",
           date: d.productionDate || "—",
           location: d.productionLocation || "—",
+          owner: d.deviceOwner || "—",
           message: "⚠️ Revoked — device was registered but has been invalidated.",
         });
-        setStatusMsg("⚠️ Revoked");
       }
     } catch (err) {
       console.error("verifyDevice error (full):", err);
       setInfo(null);
-      setStatusMsg("❌ Verification failed: " + (err?.message || err));
     } finally {
       setLoadingVerify(false);
+      setStatusMsg("");
     }
   }
 
@@ -244,32 +260,32 @@ function GuestApp() {
       fontFamily: "system-ui" 
     }}>
 
-{/* ADD BACK ARROW FOR GUEST */}
-    <button
-      onClick={() => window.location.reload()}
-      style={{
-        position: "absolute",
-        top: "20px",
-        left: "20px",
-        background: "none",
-        border: "none",
-        fontSize: "24px",
-        cursor: "pointer",
-        color: "#0369a1",
-        padding: "8px",
-        borderRadius: "50%",
-        width: "40px",
-        height: "40px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "background-color 0.2s"
-      }}
-      onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(3, 105, 161, 0.1)"}
-      onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
-    >
-      ←
-    </button>
+      {/* ADD BACK ARROW FOR GUEST */}
+      <button
+        onClick={() => window.location.reload()}
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          background: "none",
+          border: "none",
+          fontSize: "24px",
+          cursor: "pointer",
+          color: "#0369a1",
+          padding: "8px",
+          borderRadius: "50%",
+          width: "40px",
+          height: "40px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "background-color 0.2s"
+        }}
+        onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(3, 105, 161, 0.1)"}
+        onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+      >
+        ←
+      </button>
 
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         <h1 style={{ color: "#0369a1", textAlign: "center", marginBottom: "2rem" }}>
@@ -328,63 +344,71 @@ function GuestApp() {
             {loadingVerify ? "Verifying..." : "Verify Device"}
           </button>
 
-          {statusMsg && (
-            <p style={{ 
-              marginTop: "1rem", 
-              color: statusMsg.includes("✅") ? "#059669" : 
-                    statusMsg.includes("⚠️") ? "#d97706" : "#dc2626" 
-            }}>
-              {statusMsg}
-            </p>
-          )}
 
           {/* Results Display */}
           {info && (
             <div style={{ marginTop: "1.5rem", padding: "1rem", background: "#f8fafc", borderRadius: "8px" }}>
               <p><strong>Serial:</strong> {info.serial}</p>
+              <p style={{ color: info.status === "authentic" ? "green" : info.status === "revoked" ? "#b45309" : "red" }}>
+                <strong>Status:</strong> {info.message}
+              </p>
               {info.status === "authentic" && (
                 <>
-                  <p style={{ color: "green" }}><strong>Status:</strong> {info.message}</p>
                   <p><strong>Manufacturer:</strong> {info.manufacturer}</p>
                   <p><strong>Date:</strong> {info.date}</p>
                   <p><strong>Location:</strong> {info.location}</p>
+                  <p><strong>Owner:</strong> {info.owner}</p>
                 </>
               )}
               {info.status === "revoked" && (
                 <>
-                  <p style={{ color: "#b45309" }}><strong>Status:</strong> {info.message}</p>
                   <p><strong>Manufacturer:</strong> {info.manufacturer}</p>
                   <p><strong>Date:</strong> {info.date}</p>
                   <p><strong>Location:</strong> {info.location}</p>
+                  <p><strong>Owner:</strong> {info.owner}</p>
                 </>
-              )}
-              {info.status === "invalid" && (
-                <p style={{ color: "red" }}><strong>Status:</strong> {info.message}</p>
               )}
             </div>
           )}
 
-          {/* META MASK HELP LINK FOR GUEST PAGE */}
-        <p style={{ 
-          textAlign: "center", 
-          marginTop: "2rem", 
-          color: "#64748b",
-          fontSize: "0.9rem"
-        }}>
-          How to Register a MetaMask Wallet?{" "}
-          <a
-            href="https://support.metamask.io/start/getting-started-with-metamask/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ 
-              color: "#0374b1ff", 
-              textDecoration: "underline",
-              fontWeight: "500"
-            }}
-          >
-            <br />Read more.
-          </a>
-        </p>
+          {/* DUPLICATED META MASK HELP SECTION FOR GUEST PAGE */}
+          <div style={{ 
+            textAlign: "center", 
+            marginTop: "2rem", 
+            color: "#64748b",
+            fontSize: "0.9rem"
+          }}>
+            How to Register a MetaMask Wallet?{" "}
+            <a
+              href="https://support.metamask.io/start/getting-started-with-metamask/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ 
+                color: "#0374b1ff", 
+                textDecoration: "underline",
+                fontWeight: "500"
+              }}
+            >
+              <br />Read more.
+            </a>
+            <p style={{ marginTop: "0.5rem", marginBottom: "0.5rem", fontSize: "0.8rem" }}>
+              For mobile users,
+              <br />1. Install MetaMask app from App Store / Play Store
+              <br />2. Open this site in MetaMask's built-in browser
+            </p>
+            <a
+              href="https://support.metamask.io/start/getting-started-with-metamask/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ 
+                color: "#0374b1ff", 
+                textDecoration: "underline",
+                fontWeight: "500"
+              }}
+            >
+              Read detailed guide
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -457,6 +481,7 @@ function LoggedInApp({ account }) {
           manufacturer: d.manufacturer || "—",
           date: d.productionDate || "—",
           location: d.productionLocation || "—",
+          owner: d.deviceOwner || "—",
           message: "✅ Authentic — device is valid and active.",
         });
       } else {
@@ -466,6 +491,7 @@ function LoggedInApp({ account }) {
           manufacturer: d.manufacturer || "—",
           date: d.productionDate || "—",
           location: d.productionLocation || "—",
+          owner: d.deviceOwner || "—",
           message: "⚠️ Revoked — device was registered but has been invalidated.",
         });
       }
@@ -474,6 +500,7 @@ function LoggedInApp({ account }) {
       setInfo(null);
     } finally {
       setLoadingVerify(false);
+      setStatusMsg("");
     }
   }
 
@@ -537,32 +564,32 @@ function LoggedInApp({ account }) {
       fontFamily: "system-ui" 
     }}>
 
-    {/* ADD BACK ARROW FOR LOGGED IN */}
-    <button
-      onClick={() => window.location.reload()}
-      style={{
-        position: "absolute",
-        top: "20px",
-        left: "20px",
-        background: "none",
-        border: "none",
-        fontSize: "24px",
-        cursor: "pointer",
-        color: "#0369a1",
-        padding: "8px",
-        borderRadius: "50%",
-        width: "40px",
-        height: "40px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "background-color 0.2s"
-      }}
-      onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(3, 105, 161, 0.1)"}
-      onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
-    >
-      ←
-    </button>
+      {/* ADD BACK ARROW FOR LOGGED IN */}
+      <button
+        onClick={() => window.location.reload()}
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          background: "none",
+          border: "none",
+          fontSize: "24px",
+          cursor: "pointer",
+          color: "#0369a1",
+          padding: "8px",
+          borderRadius: "50%",
+          width: "40px",
+          height: "40px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "background-color 0.2s"
+        }}
+        onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(3, 105, 161, 0.1)"}
+        onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+      >
+        ←
+      </button>
 
       <div style={{ maxWidth: "1000px", margin: "0 auto", paddingTop: "60px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
@@ -662,11 +689,11 @@ function LoggedInApp({ account }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: "#0369a1", textDecoration: "underline" }}
-              >
-                Etherscan
-              </a>{" "}
-              for behind-the-scenes authentication.
-            </p>
+            >
+              Etherscan
+            </a>{" "}
+            for behind-the-scenes authentication.
+          </p>
             
             <input
               placeholder="Enter Serial Number"
@@ -701,24 +728,24 @@ function LoggedInApp({ account }) {
             {info && (
               <div style={{ marginTop: "1.5rem", padding: "1rem", background: "#f8fafc", borderRadius: "8px" }}>
                 <p><strong>Serial:</strong> {info.serial}</p>
+                <p style={{ color: info.status === "authentic" ? "green" : info.status === "revoked" ? "#b45309" : "red" }}>
+                  <strong>Status:</strong> {info.message}
+                </p>
                 {info.status === "authentic" && (
                   <>
-                    <p style={{ color: "green" }}><strong>Status:</strong> {info.message}</p>
                     <p><strong>Manufacturer:</strong> {info.manufacturer}</p>
                     <p><strong>Date:</strong> {info.date}</p>
                     <p><strong>Location:</strong> {info.location}</p>
+                    <p><strong>Owner:</strong> {info.owner}</p>
                   </>
                 )}
                 {info.status === "revoked" && (
                   <>
-                    <p style={{ color: "#b45309" }}><strong>Status:</strong> {info.message}</p>
                     <p><strong>Manufacturer:</strong> {info.manufacturer}</p>
                     <p><strong>Date:</strong> {info.date}</p>
                     <p><strong>Location:</strong> {info.location}</p>
+                    <p><strong>Owner:</strong> {info.owner}</p>
                   </>
-                )}
-                {info.status === "invalid" && (
-                  <p style={{ color: "red" }}><strong>Status:</strong> {info.message}</p>
                 )}
               </div>
             )}

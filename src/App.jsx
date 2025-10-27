@@ -62,7 +62,7 @@ async function connectWallet() {
         {/* Title */}
         <h1 style={{ 
           color: "#0369a1", 
-          fontSize: "3.5rem", 
+          fontSize: "clamp(2.5rem, 8vw, 3.5rem)", 
           fontWeight: "bold", 
           marginBottom: "0.5rem",
           textAlign: "center"
@@ -73,8 +73,8 @@ async function connectWallet() {
         {/* Subtitle */}
         <p style={{ 
           color: "#0c4a6e", 
-          fontSize: "1.5rem", 
-          marginBottom: "3rem",
+          fontSize: "clamp(1.2rem, 4vw, 1.5rem)", 
+          marginBottom: "clamp(2rem, 6vw, 3rem)",
           textAlign: "center"
         }}>
           Device Verification Site. Powered by Ethereum Sepolia.
@@ -129,7 +129,7 @@ async function connectWallet() {
               cursor: "pointer"
             }}
           >
-            Continue as User
+            Continue as User (public access)
           </button>
 
           {statusMsg && (
@@ -242,6 +242,34 @@ function GuestApp() {
       padding: 24, 
       fontFamily: "system-ui" 
     }}>
+
+{/* ADD BACK ARROW FOR GUEST */}
+    <button
+      onClick={() => window.location.reload()}
+      style={{
+        position: "absolute",
+        top: "20px",
+        left: "20px",
+        background: "none",
+        border: "none",
+        fontSize: "24px",
+        cursor: "pointer",
+        color: "#0369a1",
+        padding: "8px",
+        borderRadius: "50%",
+        width: "40px",
+        height: "40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "background-color 0.2s"
+      }}
+      onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(3, 105, 161, 0.1)"}
+      onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+    >
+      ←
+    </button>
+
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         <h1 style={{ color: "#0369a1", textAlign: "center", marginBottom: "2rem" }}>
           Dashboard - Public Access
@@ -334,6 +362,28 @@ function GuestApp() {
               )}
             </div>
           )}
+
+          {/* META MASK HELP LINK FOR GUEST PAGE */}
+        <p style={{ 
+          textAlign: "center", 
+          marginTop: "2rem", 
+          color: "#64748b",
+          fontSize: "0.9rem"
+        }}>
+          How to Register a MetaMask Wallet?{" "}
+          <a
+            href="https://support.metamask.io/start/getting-started-with-metamask/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ 
+              color: "#0374b1ff", 
+              textDecoration: "underline",
+              fontWeight: "500"
+            }}
+          >
+            Read more.
+          </a>
+        </p>
         </div>
       </div>
     </div>
@@ -485,7 +535,35 @@ function LoggedInApp({ account }) {
       padding: 24, 
       fontFamily: "system-ui" 
     }}>
-      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+
+    {/* ADD BACK ARROW FOR LOGGED IN */}
+    <button
+      onClick={() => window.location.reload()}
+      style={{
+        position: "absolute",
+        top: "20px",
+        left: "20px",
+        background: "none",
+        border: "none",
+        fontSize: "24px",
+        cursor: "pointer",
+        color: "#0369a1",
+        padding: "8px",
+        borderRadius: "50%",
+        width: "40px",
+        height: "40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "background-color 0.2s"
+      }}
+      onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(3, 105, 161, 0.1)"}
+      onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+    >
+      ←
+    </button>
+
+      <div style={{ maxWidth: "1000px", margin: "0 auto", paddingTop: "60px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
           <h1 style={{ color: "#0369a1" }}>Dashboard - Internal Access</h1>
           <div style={{ color: "#0369a1", fontWeight: "bold" }}>
@@ -516,9 +594,12 @@ function LoggedInApp({ account }) {
           {/* Register Device Column */}
           <div style={{ 
             background: "white", 
-            padding: "2rem", 
-            borderRadius: "12px",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"
+            padding: "clamp(1rem, 4vw, 2rem)", 
+            borderRadius: "16px", 
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            width: "90%",
+            maxWidth: "400px",
+            margin: "0 auto"
           }}>
             <h2 style={{ color: "#0369a1", marginBottom: "1rem" }}>Register New Device</h2>
             

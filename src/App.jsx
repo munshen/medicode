@@ -50,15 +50,17 @@ function App() {
   if (userType === null) {
     return (
       <div style={{ 
-        minHeight: "100vh", 
-        background: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)",
-        display: "flex", 
-        flexDirection: "column", 
-        justifyContent: "center", 
-        alignItems: "center",
-        padding: 24,
-        fontFamily: "system-ui"
+        minHeight: "100vh",
+        backgroundImage: `linear-gradient(rgba(10,25,47,0.65), rgba(17,34,64,0.65)), url('/background.png')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundBlendMode: "overlay",
+        padding: 24, 
+        fontFamily: "system-ui",
+        color: "#ffffff"
       }}>
+
         {/* Title */}
         <h1 style={{ 
           color: "#0369a1", 
@@ -168,6 +170,7 @@ function App() {
               <br />1. Install MetaMask app from App Store / Play Store
               <br />2. Open this site in MetaMask's built-in browser
             </p>
+
             <a
               href="https://support.metamask.io/start/getting-started-with-metamask/"
               target="_blank"
@@ -180,6 +183,20 @@ function App() {
             >
               Read detailed guide
             </a>
+
+            {/* Centered MetaMask icon below the "Read detailed guide" link */}
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: "3rem"
+            }}>
+              <img
+                src="/metamaskicon.png"
+                alt="MetaMask"
+                style={{ width: "16vw", maxWidth: "160px", minWidth: "60px", height: "auto", display: "block" }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -254,11 +271,21 @@ function GuestApp() {
 
   return (
     <div style={{ 
-      minHeight: "100vh", 
-      background: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)",
-      padding: 24, 
-      fontFamily: "system-ui" 
-    }}>
+    minHeight: "100vh",
+    backgroundImage: `linear-gradient(rgba(10,25,47,0.65), rgba(17,34,64,0.65)), url('/background.png')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundBlendMode: "overlay",
+    display: "flex", 
+    flexDirection: "column", 
+    justifyContent: "center", 
+    alignItems: "center",
+    padding: 24,
+    fontFamily: "system-ui",
+    color: "#ffffff"
+  }}>
+
 
       {/* ADD BACK ARROW FOR GUEST */}
       <button
@@ -395,7 +422,7 @@ function GuestApp() {
               For mobile users,
               <br />1. Install MetaMask app from App Store / Play Store
               <br />2. Open this site in MetaMask's built-in browser
-            </p>
+            </p>            
             <a
               href="https://support.metamask.io/start/getting-started-with-metamask/"
               target="_blank"
@@ -408,6 +435,21 @@ function GuestApp() {
             >
               Read detailed guide
             </a>
+
+            {/* Centered MetaMask icon below the "Read detailed guide" link */}
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: "3rem"
+            }}>
+              <img
+                src="/metamaskicon.png"
+                alt="MetaMask"
+                style={{ width: "16vw", maxWidth: "160px", minWidth: "60px", height: "auto", display: "block" }}
+              />
+            </div>
+
           </div>
         </div>
       </div>
@@ -558,11 +600,17 @@ function LoggedInApp({ account }) {
 
   return (
     <div style={{ 
-      minHeight: "100vh", 
-      background: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)",
+      minHeight: "100vh",
+      backgroundImage: `linear-gradient(rgba(10,25,47,0.65), rgba(17,34,64,0.65)), url('/background.png')`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+      backgroundBlendMode: "overlay",
       padding: 24, 
-      fontFamily: "system-ui" 
+      fontFamily: "system-ui",
+      color: "#ffffff"
     }}>
+
 
       {/* ADD BACK ARROW FOR LOGGED IN */}
       <button

@@ -479,12 +479,8 @@ function LoggedInApp({ account }) {
   const [loadingAssign, setLoadingAssign] = useState(false);
   const [loadingTransfer, setLoadingTransfer] = useState(false);
 
-  const authorizedRegistrars = [
-  "0x9Da7d2CA5C22E3134653920B98a7C9d272706329", // Owner
-  "0x11f8bfee6159076fa6b659f6920be1341ec5e954"  // New Moderator
-  ];
-
-  const isCompanyRep = authorizedRegistrars.some(addr => addr.toLowerCase() === account.toLowerCase());
+  const companyRepAddress = "0x9Da7d2CA5C22E3134653920B98a7C9d272706329";
+  const isCompanyRep = account.toLowerCase() === companyRepAddress.toLowerCase();
 
   async function registerDevice() {
     setInfo(null);

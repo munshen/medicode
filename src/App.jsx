@@ -16,7 +16,9 @@ function App() {
       
       // List of authorized addresses (company rep + collaborators)
       const authorizedAddresses = [
-        "0x9Da7d2CA5C22E3134653920B98a7C9d272706329", // Company representative
+        "0x9Da7d2CA5C22E3134653920B98a7C9d272706329",
+        "0x11f8bfee6159076fa6b659f6920be1341ec5e954" 
+        // Company representative
         // ADD MORE COLLABORATOR ADDRESSES HERE:
         // "0x1234567890123456789012345678901234567890", // Collaborator 1
         // "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd", // Collaborator 2

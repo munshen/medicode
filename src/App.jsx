@@ -60,7 +60,7 @@ function App() {
         backgroundBlendMode: "overlay",
         padding: 24, 
         fontFamily: "system-ui",
-        color: "#ffffff"
+        color: "#000000"
       }}>
 
         {/* Title */}
@@ -285,7 +285,7 @@ function GuestApp() {
     alignItems: "center",
     padding: 24,
     fontFamily: "system-ui",
-    color: "#ffffff"
+    color: "#000000"
   }}>
 
 
@@ -610,7 +610,7 @@ function LoggedInApp({ account }) {
       backgroundBlendMode: "overlay",
       padding: 24, 
       fontFamily: "system-ui",
-      color: "#ffffff"
+      color: "#000000"
     }}>
 
 
